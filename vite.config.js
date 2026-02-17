@@ -1,38 +1,47 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from "vite-plugin-top-level-await";
-import path from 'path'; // <--- Essential for path.resolve
+import path from 'path';
 
-export default defineConfig({
-    plugins: [
-        wasm(),
-        topLevelAwait()
-    ],
-    define: {
-        'process.env': {},
-        'global': 'globalThis'
-    },
-    optimizeDeps: {
-        include: ['@element-hq/web-shared-components'],
-        esbuildOptions: {
-            target: 'esnext'
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd());
+
+    return {
+        root: 'resources/public',
+        plugins: [
+            wasm(),
+            topLevelAwait()
+        ],
+
+        define: {
+            'process.env.MATRIX_HOMESERVER': JSON.stringify(env.VITE_MATRIX_HOMESERVER || "https://matrix.org"),
+            'global': 'globalThis'
+        },
+
+        optimizeDeps: {
+            include: ['@element-hq/web-shared-components'],
+            esbuildOptions: {
+                target: 'esnext'
+            }
+        },
+
+        resolve: {
+            alias: {
+                "generated-compat": path.resolve(__dirname, './packages/generated-compat/src/index.web.js')
+            }
+        },
+
+        server: {
+            port: 8000,
+            host: true,
+            fs: {
+                allow: [
+                    path.resolve(__dirname, 'resources/public'),
+                    path.resolve(__dirname, 'src'),
+                    path.resolve(__dirname, 'packages'), // Added this too
+                    path.resolve(__dirname, 'node_modules')
+                ]
+            }
         }
-    },
-    resolve: {
-        alias: {
-            // This tells Vite: "When you see this name, go here."
-            // We use the absolute path to make sure Vite doesn't get lost.
-            "generated_compat": path.resolve(__dirname, './src/generated-compat/index.web..js')
-        }
-    },
-    // Ensure Vite is looking at your public dir for index.html
-    root: 'resources/public',
-    server: {
-        port: 8000,
-        host: true,
-        fs: {
-            // Allow Vite to reach outside 'resources/public' into 'src' for the alias
-            allow: ['..']
-        }
-    }
+    };
 });

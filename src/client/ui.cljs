@@ -1,9 +1,12 @@
 (ns client.ui
   (:require [reagent.core :as r]
-            [client.timeline :as timeline]))
+            [client.timeline :as timeline])
+  (:require-macros [macros :refer [ocall oget]])
+
+  )
 
 (defn login-screen [on-login-trigger]
-  (let [fields (r/atom {:hs "https://matrix.org" :user "" :pass ""})]
+  (let [fields (r/atom {:hs (or js/process.env.MATRIX_HOMESERVER "") :user "" :pass ""})]
     (fn [on-login-trigger]
       [:div.login-container.flex.flex-col.items-center.justify-center.h-screen.bg-gray-900
        [:h2.text-white.mb-4 "Clorusa Login"]
