@@ -1,0 +1,25 @@
+{
+    "presets": [
+        [
+            "@babel/preset-env",
+            {
+                "modules": false
+            }
+        ]
+    ],
+    "plugins": [
+        [
+            "transform-rename-import",
+            {
+                "replacements": [
+                    {
+                        "original": "^(.*)\\?url$",
+                        "replacement": "$1"
+                    }
+                ]
+            }
+        ],
+        "@babel/plugin-transform-class-properties",
+        "@babel/plugin-transform-computed-properties"
+    ]
+}
