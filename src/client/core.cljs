@@ -1,0 +1,101 @@
+(ns client.core
+  (:require [reagent.core :as r]
+            [reagent.dom :as rdom]
+            ["@element-hq/web-shared-components" :as element-ui]
+            [client.login :as login]
+            [client.ui :as ui]
+            [client.state :refer [sdk-world]] 
+            [promesa.core :as p]
+            [client.timeline :as timeline])
+  (:require-macros [macros :refer [ocall oget]]))
+
+(defn mount-vm! 
+  "Plugs an SDK ViewModel into our global brain."
+  [id raw-vm]
+  (let [
+        update-snap! (fn []
+                       (let [snap (.getSnapshot raw-vm)
+                             clj-data (js->clj snap :keywordize-keys true)]
+                         (swap! sdk-world assoc-in [:snapshots id] clj-data)))
+        
+        unsub (.subscribe raw-vm update-snap!)]
+    (update-snap!)
+    (swap! sdk-world assoc-in [:vms id]
+           {:instance raw-vm
+            :unsub unsub
+            :dispose (fn []
+                       (unsub)
+                       (.dispose raw-vm))})
+    (js/console.log (str "Mounted VM: " (name id)))))
+
+(defn unmount-vm! 
+  "Safely unplugs a ViewModel and clears its memory."
+  [id]
+  (when-let [vm-map (get-in @sdk-world [:vms id])]
+    ((:dispose vm-map))
+    (swap! sdk-world update :vms dissoc id)
+    (swap! sdk-world update :snapshots dissoc id)
+    (js/console.log (str "Unmounted VM: " (name id)))))
+
+
+(defn setup-room-list! [client]
+  (let [raw-vm (new element-ui/RoomListViewModel #js {:client (.-raw-client client)})]
+    (mount-vm! :room-list raw-vm)
+    (swap! sdk-world assoc :loading? false)))
+
+(defn handle-login-request [hs user pass]
+  (swap! sdk-world assoc :loading? true)
+  (login/login! hs user pass 
+                (fn [client]
+                  (swap! sdk-world assoc :client client))
+                setup-room-list!))
+
+(defn handle-room-selection [room-id]
+  (swap! sdk-world assoc :active-room-id room-id)
+  (unmount-vm! :active-timeline)
+  (let [client (:client @sdk-world)
+        raw-room (ocall (.-raw-client client) :getRoom room-id)
+        raw-timeline-vm (new element-ui/TimelineViewModel #js {:room raw-room})]
+    (mount-vm! :active-timeline raw-timeline-vm)))
+
+(defn app []
+  (let [{:keys [client loading? snapshots active-room-id]} @sdk-world
+        room-list-data (:room-list snapshots)
+        timeline-data  (:active-timeline snapshots)]
+    [:div.h-screen.flex.bg-gray-900.text-white
+     (cond
+       loading? 
+       [:div.flex.items-center.justify-center.w-full.h-full
+        [:span.text-xl.animate-pulse "Connecting to Matrix..."]]
+       
+       client
+       [:<>
+        [ui/room-list-view (:rooms room-list-data) active-room-id handle-room-selection]
+        
+        (if active-room-id
+          [ui/room-view active-room-id timeline-data]
+          [:div.flex-1.flex.items-center.justify-center.text-gray-500
+           "Select a room to start chatting"])]
+       
+       :else
+       [ui/login-screen handle-login-request])]))
+
+(defn ^:export init []
+  (login/init-sdk!)
+  (rdom/render [app] (js/document.getElementById "app")))
+
+(defn ^:after-load on-reload []
+  (doseq [id (keys (:vms @sdk-world))]
+    (unmount-vm! id))
+  
+  (when-let [client (:client @sdk-world)]
+    (js/console.log "Disposing WASM Client...")
+    (client.state/dispose! client))
+    
+
+  (reset! sdk-world {:client nil 
+                     :vms {} 
+                     :snapshots {} 
+                     :loading? false 
+                     :active-room-id nil})
+  (js/console.log "State reset and memory cleared."))
