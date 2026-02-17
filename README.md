@@ -12,7 +12,7 @@ Setup is currently extremely messy. I've included the prebuilt generated-compat 
 
 You need not do this as the generated files are included, but if for some reason you wanted to they were generated
 like so:
-'''
+```
 npm i
 guix shell -FNC -m manifest.scm
 sh irust.sh
@@ -23,10 +23,13 @@ sh babel.sh
 Running involves two terminal windows or running both commands together at the moment. No release build for shadow-cljs quite yet.
 
 So for developing:
+
 ```
 npx shadow-cljs watch app
 ```
+
 and
+B
 ```
 npx vite
 ```
