@@ -5,7 +5,6 @@
             ["@element-hq/web-shared-components" :as element-ui])
   (:require-macros [macros :refer [ocall oget]]))
 
-
 (defprotocol IMatrixClient
   "Structured access to the Matrix Rust SDK Client"
   (get-sync-service [this])
@@ -16,7 +15,6 @@
 (defprotocol IDisposable
   "Lifecycle management for WASM memory"
   (dispose! [this]))
-
 
 (deftype MatrixClient [raw-client]
   IMatrixClient
@@ -37,8 +35,6 @@
 
 (defrecord SDKWorld [client rooms active-room ctrl handles loading?])
 
-
-;; Enforcement: ensure :client is a MatrixClient (satisfies the protocol)
 (s/def ::matrix-client #(satisfies? IMatrixClient %))
 (s/def ::sdk-world (s/keys :req-un [::matrix-client]))
 
@@ -50,7 +46,6 @@
       new-world
       (throw (js/Error. (str "Invalid SDK World State: " (s/explain-str ::sdk-world new-world)))))))
 
-;; The Single Source of Truth
 (defonce sdk-world 
   (r/atom (map->SDKWorld 
             {:client nil 
@@ -67,8 +62,6 @@
                  (js/console.error "TYPE VIOLATION: Raw WASM object detected in sdk-world! 
                            Did you forget to wrap it in (MatrixClient. obj)?")))))
 
-
-
 (defn hook-vm! 
   "Connects an npm ViewModel to our Reagent world."
   [vm atom-path]
@@ -79,7 +72,7 @@
       (unsub)
       (.dispose vm))))
 
-(defn mount-vm! 
+(defn mount-vm!
   "Plugs an SDK ViewModel into our global brain."
   [id raw-vm]
   (let [
@@ -87,18 +80,14 @@
                        (let [snap (.getSnapshot raw-vm)
                              clj-data (js->clj snap :keywordize-keys true)]
                          (swap! sdk-world assoc-in [:snapshots id] clj-data)))
-        
         unsub (.subscribe raw-vm update-snap!)]
-    
     (update-snap!)
-    
     (swap! sdk-world assoc-in [:vms id]
            {:instance raw-vm
             :unsub unsub
             :dispose (fn []
                        (unsub)
                        (.dispose raw-vm))})
-    
     (js/console.log (str "Mounted VM: " id))))
 
 (defn unmount-vm! 
@@ -110,11 +99,10 @@
     (swap! sdk-world update :snapshots dissoc id)
     (js/console.log (str "Unmounted VM: " id))))
 
-
 (defn ^:export debug-world []
-  (let [data (clj->js @sdk-world)]
-    (js/console.log "SDK WORLD DUMP:" data)
-    data))
+    (let [data (clj->js @sdk-world)]
+      (js/console.log "SDK WORLD DUMP:" data)
+      data))
 
 (defn set-client! [raw-wasm-obj]
   (when-let [old-client (:client @sdk-world)]
