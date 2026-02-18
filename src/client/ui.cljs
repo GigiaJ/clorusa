@@ -1,9 +1,7 @@
 (ns client.ui
   (:require [reagent.core :as r]
             [client.timeline :as timeline])
-  (:require-macros [macros :refer [ocall oget]])
-
-  )
+  (:require-macros [macros :refer [ocall oget]]))
 
 (defn login-screen [on-login-trigger]
   (let [fields (r/atom {:hs (or js/process.env.MATRIX_HOMESERVER "") :user "" :pass ""})]
@@ -36,8 +34,7 @@
          {:key rid
           :class (when (= @selected-room-atom room) "bg-gray-700")
           :on-click #(on-room-click room)}
-         (or rname rid "Unnamed Room")])))] )
-
+         (or rname rid "Unnamed Room")])))])
 
 (defn room-view [selected-room]
   [:div.flex-1.flex.flex-col.bg-gray-900
