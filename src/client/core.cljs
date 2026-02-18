@@ -17,7 +17,6 @@
                        (let [snap (.getSnapshot raw-vm)
                              clj-data (js->clj snap :keywordize-keys true)]
                          (swap! sdk-world assoc-in [:snapshots id] clj-data)))
-        
         unsub (.subscribe raw-vm update-snap!)]
     (update-snap!)
     (swap! sdk-world assoc-in [:vms id]
@@ -33,10 +32,10 @@
   [id]
   (when-let [vm-map (get-in @sdk-world [:vms id])]
     ((:dispose vm-map))
+
     (swap! sdk-world update :vms dissoc id)
     (swap! sdk-world update :snapshots dissoc id)
     (js/console.log (str "Unmounted VM: " (name id)))))
-
 
 (defn setup-room-list! [client]
   (let [raw-vm (new element-ui/RoomListViewModel #js {:client (.-raw-client client)})]
@@ -45,7 +44,7 @@
 
 (defn handle-login-request [hs user pass]
   (swap! sdk-world assoc :loading? true)
-  (login/login! hs user pass 
+  (login/login! hs user pass
                 (fn [client]
                   (swap! sdk-world assoc :client client))
                 setup-room-list!))
@@ -64,19 +63,16 @@
         timeline-data  (:active-timeline snapshots)]
     [:div.h-screen.flex.bg-gray-900.text-white
      (cond
-       loading? 
+       loading?
        [:div.flex.items-center.justify-center.w-full.h-full
         [:span.text-xl.animate-pulse "Connecting to Matrix..."]]
-       
        client
        [:<>
         [ui/room-list-view (:rooms room-list-data) active-room-id handle-room-selection]
-        
         (if active-room-id
           [ui/room-view active-room-id timeline-data]
           [:div.flex-1.flex.items-center.justify-center.text-gray-500
            "Select a room to start chatting"])]
-       
        :else
        [ui/login-screen handle-login-request])]))
 
