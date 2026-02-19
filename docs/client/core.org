@@ -91,10 +91,11 @@ For now this merely provides an outline to work within.
 
 
 Provides the entry-point for the application that Vite and the index.html enter from.
-#+begin_src clojurescript :tangle ../../src/client/core.cljs
+#+begin_src clojurescript  :tangle ../../src/client/core.cljs
 (defn ^:export init []
-  (login/init-sdk!)
+  (login/bootstrap!)
   (rdom/render [app] (js/document.getElementById "app")))
+
 #+end_src
 
 
@@ -116,3 +117,4 @@ This will ensure the components dismount properly on refresh.
                      :active-room-id nil})
   (js/console.log "State reset and memory cleared."))
 #+end_src
+
