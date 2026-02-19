@@ -77,7 +77,7 @@
        [ui/login-screen handle-login-request])]))
 
 (defn ^:export init []
-  (login/init-sdk!)
+  (login/bootstrap!)
   (rdom/render [app] (js/document.getElementById "app")))
 
 (defn ^:after-load on-reload []

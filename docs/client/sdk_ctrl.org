@@ -1,3 +1,4 @@
+
 #+begin_src clojurescript :tangle ../../src/client/sdk_ctrl.cljs
 (ns client.sdk-ctrl
   (:require [client.state :refer [sdk-world]]
@@ -44,7 +45,7 @@
       "NotLoaded" (swap! sdk-world assoc :loading? true)
       "Loaded"    (do (swap! sdk-world assoc :loading? false)
                       (setup-entries! rls))
-      nil))
+      nil)))
 #+end_src
 
 #+begin_src clojurescript :tangle ../../src/client/sdk_ctrl.cljs

@@ -35,7 +35,7 @@
       "NotLoaded" (swap! sdk-world assoc :loading? true)
       "Loaded"    (do (swap! sdk-world assoc :loading? false)
                       (setup-entries! rls))
-      nil))
+      nil)))
 
 (defn setup-room-list! [rls]
   (let [res (ocall rls :loadingState #js {:onUpdate #(loading-state-handler % rls)})
