@@ -1,9 +1,9 @@
 {
-    "name": "clorusa",
+    "name": "Paradise",
     "version": "0.0.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/GigiaJ/clorusa"
+        "url": "https://github.com/GigiaJ/Paradise"
     },
     "scripts": {
         "ubrn:web:build:release": "PATH=$HOME/.cargo/bin:/bin:$PATH && ubrn build web --config ubrn.config.yaml --release",
